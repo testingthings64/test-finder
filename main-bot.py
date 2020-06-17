@@ -2,10 +2,8 @@ from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardBut
 from telegram.ext import Filters, MessageHandler, ConversationHandler, Updater, CommandHandler, CallbackQueryHandler
 import logging
 import database as db
-import os
 
 
-PORT = int(os.environ.get('PORT', 5000))
 token = '981262545:AAGGFMJ_7i8lg_wCRuYQGCozJmxoRhAec10'
 bot = Bot(token = token)
 
@@ -385,11 +383,7 @@ def main():
     dis.add_handler(conv_handler)
     dis.add_handler(CallbackQueryHandler(buttons))
 
-    # updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                          port=int(PORT),
-                          url_path=token)
-    updater.bot.setWebhook('https://safe-cove-63138.herokuapp.com/' + token)
+    updater.start_polling()
 
     updater.idle()
 
