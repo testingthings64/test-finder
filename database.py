@@ -2,76 +2,129 @@ import sqlite3
 
 
 def new_user(tel_id, gender, status = 'normal'):
-    connection = sqlite3.connect('test.db')
-    cursor = connection.cursor()
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
 
-    cursor.execute("INSERT INTO users VALUES (?,?,?)",(tel_id,gender,status))
+        cursor.execute("INSERT INTO users VALUES (?,?,?)",(tel_id,gender,status))
 
-    connection.commit()
-    connection.close()
-
-    return True
-
-
-def new_advertisment(user_id,gender,name,age,city,height,weight,price,number,context,photo,code,status):
-    connection = sqlite3.connect('test.db')
-    cursor = connection.cursor()
-
-    cursor.execute("INSERT INTO advertisments VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",(user_id,gender,name,age,city,height,weight,price,number,context,photo,code,status))
-
-    connection.commit()
-    connection.close()
+        connection.commit()
+        return True
+    except sqlite3.Error as error:
+        print(error)
+        return False
+    finally:
+        if connection:
+            connection.close()
 
 
-def get_all_users():
-    connection = sqlite3.connect('test.db')
-    cursor = connection.cursor()
 
-    cursor.execute("SELECT * FROM users")
+def new_female_advertisement(data):
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        # for save in data:
+        #     res = data[save]
+        #     exec(save + f"= '{res}'")
+        cursor.execute("INSERT INTO 'female-advertisement' VALUES (?,?,?,?,?,?,?,?,?,?)",(data['tel_id'],data['name'],data['age'],data['city'],data['height'],data['weight'],data['price'],data['number'],data['context'],data['status']))
 
-    results = cursor.fetchall()
+        connection.commit()
+        return True
+    except sqlite3.Error as error:
+        print(error)
+        return False
+    finally:
+        if connection:
+            connection.close()
 
-    connection.commit()
-    connection.close()
-
-    return results
 
 
-def get_all_advertisments(gender):
-    connection = sqlite3.connect('test.db')
-    cursor = connection.cursor()
 
-    cursor.execute("SELECT * FROM advertisments WHERE gender = (?)",(gender,))
+# def get_all_users():
+#     connection = sqlite3.connect('database.db')
+#     cursor = connection.cursor()
 
-    results = cursor.fetchall()
+#     cursor.execute("SELECT * FROM users")
 
-    connection.commit()
-    connection.close()
+#     results = cursor.fetchall()
 
-    return results
+#     connection.commit()
+#     connection.close()
+
+#     return results
+
+
+def get_all_advertisements(gender):
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        if gender == 'female':
+            cursor.execute("SELECT * FROM 'female-advertisement'")
+        elif gender == 'male':
+            cursor.execute("SELECT * FROM 'male-advertisement'")
+
+        results = cursor.fetchall()
+
+        connection.commit()
+
+        return results
+
+    except sqlite3.Error as error:
+        print(error) 
+        return False
+    finally:
+        if connection:
+            connection.close()
 
 
 def check_user(tel_id):
-    connection = sqlite3.connect('test.db')
-    cursor = connection.cursor()
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT tel_id FROM users WHERE tel_id = (?)",(tel_id,))
+        exists = cursor.fetchone()
+        connection.commit()
+        if exists:
+            return True
+        return False
+    except sqlite3.Error as error:
+        print(error)
+    finally:
+        if connection:
+            connection.close()
 
-    cursor.execute("SELECT tel_id FROM users WHERE tel_id = (?)",(tel_id,))
-    exists = cursor.fetchone()
-    connection.commit()
-    connection.close()
-    if exists:
-        return True
-    return False
+
+def check_female_advertisement(tel_id):
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT tel_id FROM 'female-advertisement' WHERE tel_id = (?)",(tel_id,))
+        exists = cursor.fetchone()
+        connection.commit()
+        if exists:
+            return True
+        return False
+    except sqlite3.Error as error:
+        print(error)
+    finally:
+        if connection:
+            connection.close()
 
 
 def get_gender(tel_id):
-    connection = sqlite3.connect('test.db')
-    cursor = connection.cursor()
-    cursor.execute("SELECT gender FROM users WHERE tel_id = (?)",(tel_id,))
-    gender = cursor.fetchone()
-    connection.commit()
-    connection.close()
-    return gender
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT gender FROM users WHERE tel_id = (?)",(tel_id,))
+        gender = cursor.fetchone()
+        connection.commit()
+        return gender
+    except sqlite3.Error as error:
+        print(error)
+        return False
+    finally:
+        if connection:
+            connection.close()
 
 # cursor.execute(""" 
 #     CREATE TABLE users (
@@ -90,10 +143,10 @@ def get_gender(tel_id):
 
 # cursor.executemany("INSERT INTO users VALUES (?,?,?)",many_users)
 
-# cursor.execute("DROP TABLE advertisments")
+# cursor.execute("DROP TABLE advertisements")
 
 # cursor.execute("""
-#     CREATE TABLE advertisments (
+#     CREATE TABLE advertisements (
 #         user_id integer,
 #         gender text,
 #         name text,
@@ -122,4 +175,7 @@ def get_gender(tel_id):
 # code = 1234567
 # photo = None
 
-# cursor.execute("INSERT INTO advertisments VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",(user_id,gender,name,age,city,height,weight,price,number,context,photo,code))
+# cursor.execute("INSERT INTO advertisements VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",(user_id,gender,name,age,city,height,weight,price,number,context,photo,code))
+
+# data = {'tel_id': 1020718360, 'name': 'فلان فلانی', 'age': '30', 'city': 'تهران', 'height': '170', 'weight': '70', 'price': '800', 'number': '09652398741', 'context': 'سلام خوبین من خوبم دیگه چه خبر'}
+

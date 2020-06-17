@@ -1,10 +1,13 @@
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup ,User
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup ,User, Bot, Chat
 from telegram.ext import Filters, MessageHandler, ConversationHandler, Updater, CommandHandler, CallbackQueryHandler
 import logging
 import database as db
+import os
 
 
+PORT = int(os.environ.get('PORT', 5000))
 token = '981262545:AAGGFMJ_7i8lg_wCRuYQGCozJmxoRhAec10'
+bot = Bot(token = token)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,7 +38,8 @@ def choices_male(update, context, button = True):
         [InlineKeyboardButton('ثبت آگهی جدید', callback_data = 'register_male')],
         [InlineKeyboardButton('جستجو بر اساس سن', callback_data = 'age_search'), 
         InlineKeyboardButton('جستجو بر اساس نام', callback_data = 'name_search')],
-        [InlineKeyboardButton('جستجو بر اساس مهریه', callback_data = 'price_search')]
+        [InlineKeyboardButton('جستجو بر اساس مهریه', callback_data = 'price_search')],
+        [InlineKeyboardButton('آگهی های ذخیره شده', callback_data = 'saved_codes')]
     ]
     show_keys = InlineKeyboardMarkup(keyboards, one_time_keyboard=True)
     if button:
@@ -48,8 +52,8 @@ def choices_female(update, context, button = True):
     keyboards = [
         [InlineKeyboardButton('مشاهده همه آگهی های آقا', callback_data = 'show_all_male')],
         [InlineKeyboardButton('ثبت آگهی جدید', callback_data = 'register_female')],
-        [InlineKeyboardButton('جستجو بر اساس سن', callback_data = 'age_search'), 
-        InlineKeyboardButton('جستجو بر اساس نام', callback_data = 'name_search')]
+        # [InlineKeyboardButton('جستجو بر اساس سن', callback_data = 'age_search'), 
+        # InlineKeyboardButton('جستجو بر اساس نام', callback_data = 'name_search')]
     ]
     show_keys = InlineKeyboardMarkup(keyboards, one_time_keyboard=True)
     if button:
@@ -81,7 +85,12 @@ def buttons(update, context):
 
     #register female
     elif callback == 'register_female':
-        start_reg(update, context)
+        reg_female(update, context)
+
+    #register male
+    elif callback == 'register_male':
+        reg_male(update, context)
+    
 
     #return key
     elif callback == 'return_key':
@@ -91,7 +100,15 @@ def buttons(update, context):
         elif gender == 'female':
             choices_female(update, context)
 
+    #reserve code
+    elif callback == 'reserve_code':
+        reserve_code(update, context)
 
+    #see photo
+    elif callback.split('#')[0] == 'see_code':
+        code = callback.split('#')[1]
+        send_photo(code, tel_id)
+        # print(update.callback_query)
     else:
         print(callback)
         not_exist(update, context)
@@ -99,46 +116,119 @@ def buttons(update, context):
 
 
 def all_female(update, context):
-    results = db.get_all_advertisments('female')
-    for res in results:
-        text = f"""
-            نام: {res[2]}
-سن: {res[3]}
-شهر: {res[4]}
-قد: {res[5]}
-وزن: {res[6]}
-مهریه: {res[7]}
-کد: {res[11]}
-{res[9]}
-            
+    results = db.get_all_advertisements('female')
+    if not results:
+        text = """ 
+            مشکلی پیش آمده، لطفا دوباره تلاش کنید
         """
-        update.callback_query.message.reply_text(text = text)
+    else:
+        for res in results:
+            text = f"""
+                نام: {res[1]}
+    سن: {res[2]}
+    شهر: {res[3]}
+    قد: {res[4]}
+    وزن: {res[5]}
+    مهریه: {res[6]}
+    کد: {res[0]}#
+    {res[8]}
+                
+            """
+            ret = [
+                [InlineKeyboardButton('درخواست این کد', callback_data = 'reserve_code')],
+                [InlineKeyboardButton('مشاهده تصویر', callback_data = f'see_code#{res[0]}')],
+                [InlineKeyboardButton('ذخیره آگهی', callback_data = f'save_code#{res[0]}')]
+            ]
+            ret_key = InlineKeyboardMarkup(ret)
+            update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+
+        return_key = [[InlineKeyboardButton('بازگشت', callback_data = 'return_key')]]
+        update.callback_query.message.reply_text(text = 'برای بازگشت به منوی اصلی کلیک کنید', reply_markup = InlineKeyboardMarkup(return_key))
 
 
+def send_photo(code, chat_id):
+    bot.send_photo(chat_id = chat_id, photo =  open(f'photos/img_{code}.jpg', 'rb'))
+    
 
 def all_male(update, context):
-    results = db.get_all_advertisments('male')
-    print(results)
+    results = db.get_all_advertisements('male')
+    if not results:
+        text = """ 
+            مشکلی پیش آمده، لطفا دوباره تلاش کنید
+        """
+    else:
+        for res in results:
+            text = res[1]
+            ret = [
+                [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
+            ]
+            ret_key = InlineKeyboardMarkup(ret)
+            update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
 
 
-
-def not_exist(update, context):
-    update.callback_query.edit_message_text(text = 'این مورد فعلا موجود نیست!')
-
-
-NAME, AGE, CITY, HEIGHT, WEIGHT, PRICE, NUMBER, CONTEXT, PHOTO = range(9)
-
-def start_reg(update, context):
-    text = """ 
-        لطفا تمام اطلاعات خواسته شده را با دقت وارد نمایید.
-        برای خروج از فرایند ثبت آگهی در هر مرحله، دستور  /cancel  را انتخاب نمایید.
-        برای شروع ثبت نام دستور  /register  را انتخاب کنید
-    """
+def reserve_code(update, context):
+    text = 'برای درخواست این کد، لطفا به آی دی ادمین پیام بدهید'
     ret = [
         [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
     ]
     ret_key = InlineKeyboardMarkup(ret)
-    update.callback_query.message.reply_text(text, reply_markup = ret_key)
+    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+
+
+
+def not_exist(update, context):
+    ret = [
+        [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
+    ]
+    ret_key = InlineKeyboardMarkup(ret)
+    update.callback_query.edit_message_text(text = 'این مورد فعلا موجود نیست!', reply_markup = ret_key)
+
+
+
+
+
+
+
+
+
+
+
+
+
+NAME, AGE, CITY, HEIGHT, WEIGHT, PRICE, NUMBER, CONTEXT, PHOTO = range(9)
+
+data = {}
+
+def reg_female(update, context):
+    tel_id = update.callback_query.from_user.id
+    exists = db.check_female_advertisement(tel_id)
+    if not exists:
+        data['tel_id'] = tel_id
+        data['status'] = 'pending'
+        text = """ 
+            لطفا تمام اطلاعات خواسته شده را با دقت وارد نمایید.
+            برای خروج از فرایند ثبت آگهی در هر مرحله، دستور  /cancel  را انتخاب نمایید.
+            برای شروع ثبت نام دستور  /register  را انتخاب کنید
+        """
+    else:
+        text = """ 
+            شما قبلا ثبت آگهی کرده اید
+        """
+    ret = [
+        [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
+    ]
+    ret_key = InlineKeyboardMarkup(ret)
+    update.callback_query.edit_message_text(text = text, reply_markup = ret_key)
+
+
+def reg_male(update, context):
+    text = 'برای ثبت آگهی، لطفا به آی دی ادمین پیام بدهید'
+    ret = [
+        [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
+    ]
+    ret_key = InlineKeyboardMarkup(ret)
+    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+
 
 
 def register(update, context):
@@ -151,7 +241,7 @@ def register(update, context):
 
 def name(update, context):
     in_name = update.message.text
-    print(in_name)
+    data['name'] = in_name
     text = """ 
         لطفا سن خود را به صورت فقط عدد وارد نمایید
     """
@@ -161,7 +251,7 @@ def name(update, context):
 
 def age(update, context):
     in_age = update.message.text
-    print(in_age)
+    data['age'] = in_age
     text = """ 
         لطفا نام شهر محل زندگی خود را وارد نمایید
     """
@@ -171,7 +261,7 @@ def age(update, context):
 
 def city(update, context):
     in_city = update.message.text
-    print(in_city)
+    data['city'] = in_city
     text = """ 
         لطفا قد خود را به صورت فقط عدد بر حسب سانتی متر وارد نمایید
 
@@ -183,7 +273,7 @@ def city(update, context):
 
 def height(update, context):
     in_height = update.message.text
-    print(in_height)
+    data['height'] = in_height
     text = """ 
         لطفا وزن خود را به صورت فقط عدد بر حسب کیلوگرم وارد نمایید
 
@@ -195,7 +285,7 @@ def height(update, context):
 
 def weight(update, context):
     in_weight = update.message.text
-    print(in_weight)
+    data['weight'] = in_weight
     text = """ 
         لطفا مهریه درخواستی خود برای یک ماه را بر حسب هزار تومان وارد نمایید
 
@@ -207,7 +297,7 @@ def weight(update, context):
 
 def price(update, context):
     in_price = update.message.text
-    print(in_price)
+    data['price'] = in_price
     text = """ 
         لطفا شماره موبایل خود را جهت ارتباط با شما وارد نمایید
     """
@@ -217,7 +307,7 @@ def price(update, context):
 
 def number(update, context):
     in_number = update.message.text
-    print(in_number)
+    data['number'] = in_number
     text = """ 
         لطفا یک متن برای معرفی خود و نمایش به دیگران وارد نمایید
     """
@@ -227,7 +317,7 @@ def number(update, context):
 
 def context(update, context):
     in_context = update.message.text
-    print(in_context)
+    data['context'] = in_context
     text = """ 
         لطفا یک عکس از خودتان جهت نمایش به دیگران ارسال نمایید
     """
@@ -237,19 +327,36 @@ def context(update, context):
 
 def photo(update, context):
     photo_file = update.message.photo[-1].get_file()
-    photo_file.download('user_photo.jpg')
-    text = """ 
-        ثبت نام شما تکمیل و آگهی شما ثبت شده است و پس از تایید توسط ادمین منتشر خواهد شد
-    """
-    update.message.reply_text(text)
+    file_path = f'photos/img_{data["tel_id"]}.jpg'
+    photo_file.download(file_path)
+    # blob_form = convert_to_blob(file_path)
+    # data['photo'] = blob_form
+    res_reg = db.new_female_advertisement(data)
+    if res_reg:
+        text = """ 
+            ثبت آگهی شما تکمیل شده است و پس از تایید توسط ادمین منتشر خواهد شد
+        """
+    else:
+        text = """ 
+            متاسفانه ثبت آگهی شما با خطا مواجه شد، لطفا دوباره تلاش کنید
+        """
+    ret = [
+        [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
+    ]
+    ret_key = InlineKeyboardMarkup(ret)
+    update.message.reply_text(text, reply_markup = ret_key)
     return ConversationHandler.END
 
 
 def cancel(update, context):
+    ret = [
+        [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
+    ]
+    ret_key = InlineKeyboardMarkup(ret)
     text = """ 
         شما از فرایند ثبت آگهی خارج شدید
     """
-    update.message.reply_text(text)
+    update.message.reply_text(text, reply_markup = ret_key)
     return ConversationHandler.END
 
 
@@ -278,11 +385,19 @@ def main():
     dis.add_handler(conv_handler)
     dis.add_handler(CallbackQueryHandler(buttons))
 
-    updater.start_polling()
+    # updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(PORT),
+                          url_path=token)
+    updater.bot.setWebhook('https://safe-cove-63138.herokuapp.com/' + token)
 
     updater.idle()
 
 
+# def convert_to_blob(file_name):
+#     with open(file_name, 'rb') as file:
+#         blob = file.read()
+#     return blob
 
 
 if __name__ == '__main__':
