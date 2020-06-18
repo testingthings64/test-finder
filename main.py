@@ -2,6 +2,7 @@ from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardBut
 from telegram.ext import Filters, MessageHandler, ConversationHandler, Updater, CommandHandler, CallbackQueryHandler
 import logging
 import database as db
+import button
 
 
 token = '981262545:AAGGFMJ_7i8lg_wCRuYQGCozJmxoRhAec10'
@@ -34,9 +35,10 @@ def choices_male(update, context, button = True):
     keyboards = [
         [InlineKeyboardButton('مشاهده همه آگهی های خانم', callback_data = 'show_all_female')],
         [InlineKeyboardButton('ثبت آگهی جدید', callback_data = 'register_male')],
-        [InlineKeyboardButton('جستجو بر اساس سن', callback_data = 'age_search'), 
-        InlineKeyboardButton('جستجو بر اساس نام', callback_data = 'name_search')],
-        [InlineKeyboardButton('جستجو بر اساس مهریه', callback_data = 'price_search')],
+        [InlineKeyboardButton('جستجو بر اساس سن', callback_data = 'female_age_search'), 
+        InlineKeyboardButton('جستجو بر اساس نام', callback_data = 'female_name_search')],
+        [InlineKeyboardButton('جستجو بر اساس مهریه', callback_data = 'price_search'),
+        InlineKeyboardButton('جستجو بر اساس شهر', callback_data = 'famele_city_search')],
         [InlineKeyboardButton('آگهی های ذخیره شده', callback_data = 'saved_codes')]
     ]
     show_keys = InlineKeyboardMarkup(keyboards, one_time_keyboard=True)
@@ -60,100 +62,90 @@ def choices_female(update, context, button = True):
         update.message.reply_text(text = 'لطفا یکی از گزینه های زیر را انتخاب کنید', reply_markup = show_keys)
 
 
-def buttons(update, context):
-    query = update.callback_query
-    callback = query.data
-    tel_id = update.callback_query.from_user.id
-    query.answer()
-    registered = db.check_user(tel_id)
-
-    #gender buttons
-    if callback == 'male' or 'female' and not registered:
-        check = db.new_user(tel_id, callback)
-        if check and callback == 'male':
-            choices_male(update, context)
-        elif check and callback == 'female':
-            choices_female(update, context)
-
-    #show all buttons
-    elif callback == 'show_all_female':
-        all_female(update, context)
-    elif callback == 'show_all_male':
-        all_male(update, context)
-
-    #register female
-    elif callback == 'register_female':
-        reg_female(update, context)
-
-    #register male
-    elif callback == 'register_male':
-        reg_male(update, context)
-    
-
-    #return key
-    elif callback == 'return_key':
-        gender = db.get_gender(tel_id)[0]
-        if gender == 'male':
-            choices_male(update, context)
-        elif gender == 'female':
-            choices_female(update, context)
-
-    #reserve code
-    elif callback == 'reserve_code':
-        reserve_code(update, context)
-
-    #see photo
-    elif callback.split('#')[0] == 'see_code':
-        code = callback.split('#')[1]
-        send_photo(code, tel_id)
-        # print(update.callback_query)
-    else:
-        print(callback)
-        not_exist(update, context)
-    
-
 
 def all_female(update, context):
     results = db.get_all_advertisements('female')
     if not results:
-        text = """ 
-            مشکلی پیش آمده، لطفا دوباره تلاش کنید
-        """
+        error_db(update, context)
     else:
+        text = """ 
+            لطفا روی کد مورد نظر کلیک کنید
+        """
+        key = []
         for res in results:
-            text = f"""
-                نام: {res[1]}
-    سن: {res[2]}
-    شهر: {res[3]}
-    قد: {res[4]}
-    وزن: {res[5]}
-    مهریه: {res[6]}
-    کد: {res[0]}#
-    {res[8]}
-                
-            """
-            ret = [
-                [InlineKeyboardButton('درخواست این کد', callback_data = 'reserve_code')],
-                [InlineKeyboardButton('مشاهده تصویر', callback_data = f'see_code#{res[0]}')],
-                [InlineKeyboardButton('ذخیره آگهی', callback_data = f'save_code#{res[0]}')]
-            ]
-            ret_key = InlineKeyboardMarkup(ret)
-            update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
-
-        return_key = [[InlineKeyboardButton('بازگشت', callback_data = 'return_key')]]
-        update.callback_query.message.reply_text(text = 'برای بازگشت به منوی اصلی کلیک کنید', reply_markup = InlineKeyboardMarkup(return_key))
+            key.append(code_btn(res))
+        key.append([InlineKeyboardButton('بازگشت', callback_data = 'return_key')])
+        update.callback_query.message.reply_text(text = text, reply_markup = InlineKeyboardMarkup(key))
 
 
 def send_photo(code, chat_id):
     bot.send_photo(chat_id = chat_id, photo =  open(f'photos/img_{code}.jpg', 'rb'))
+
+
+def save_code(update, context, code, tel_id):
+
+    res = db.new_save_code(code, tel_id)
+    if res:
+        text = 'آگهی مورد نظر با موفقیت ذخیره شد'
+    else:
+        text = 'آگهی مورد نظر قبلا ذخیره شده است'
+
+    key = [[InlineKeyboardButton('بازگشت به کد', callback_data = f'see_code#{code}')]]
+    update.callback_query.edit_message_text(text = text, reply_markup = InlineKeyboardMarkup(key))
+
+
+def code_btn(res):
+    btn = [InlineKeyboardButton(f"{res[1]} {res[0]}", callback_data = f"see_code#{res[0]}")]
+    return btn
+
+def see_code(update, context, code):
     
+    res = db.get_code(code)
+    if res:
+        text = f"""
+                    نام: {res[1]}
+        سن: {res[2]}
+        شهر: {res[3]}
+        قد: {res[4]}
+        وزن: {res[5]}
+        مهریه: {res[6]}
+        کد: {res[0]}#
+        {res[8]}
+                    
+                """
+        ret = [
+            [InlineKeyboardButton('درخواست این کد', callback_data = 'reserve_code')],
+            [InlineKeyboardButton('مشاهده تصویر', callback_data = f'see_photo#{res[0]}')],
+            [InlineKeyboardButton('ذخیره آگهی', callback_data = f'save_code#{res[0]}')],
+            # [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
+        ]
+        ret_key = InlineKeyboardMarkup(ret)
+        update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+    else:
+        error_db(update, context)
+
+
+def saved_codes(update, context, tel_id):
+    results = db.get_saved_codes(tel_id)
+    if results:
+        key = []
+        text = """ 
+            لطفا روی کد مورد نظر کلیک کنید
+        """
+        for tel_id in results:
+            res = db.get_btn(tel_id[0])[0]
+            key.append([InlineKeyboardButton(f"{res[1]} {res[0]}", callback_data = f"see_code#{res[0]}")])
+        # key.append([InlineKeyboardButton('بازگشت', callback_data = 'return_key')])
+        update.callback_query.message.reply_text(text = text, reply_markup = InlineKeyboardMarkup(key))
+    else:
+        error_db(update, context)
+
+
 
 def all_male(update, context):
     results = db.get_all_advertisements('male')
     if not results:
-        text = """ 
-            مشکلی پیش آمده، لطفا دوباره تلاش کنید
-        """
+        error_db(update, context)
     else:
         for res in results:
             text = res[1]
@@ -172,6 +164,16 @@ def reserve_code(update, context):
     ret_key = InlineKeyboardMarkup(ret)
     update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
 
+
+
+def female_age_search(update,context):
+    text = "بازه سنی مورد نظر خود را انتخاب نمایید"
+    keys = [
+        [InlineKeyboardButton('18 تا 30 سال', callback_data = 'age_range#1'),InlineKeyboardButton('30 تا 40 سال', callback_data = 'age_range#2')],
+        [InlineKeyboardButton('40 تا 50 سال', callback_data = 'age_range#3'),InlineKeyboardButton('50 سال به بالا', callback_data = 'age_range#4')]
+    ]
+    ret_key = InlineKeyboardMarkup(keys)
+    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
 
 
 def not_exist(update, context):
@@ -358,6 +360,11 @@ def cancel(update, context):
     return ConversationHandler.END
 
 
+def error_db(update, context):
+    text = "مشکلی پیش آمده، لطفا دوباره تلاش کنید"
+    ret_key = InlineKeyboardMarkup([[InlineKeyboardButton('بازگشت', callback_data = 'return_key')]])
+    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+
 
 def main():
     updater = Updater(token, use_context = True)
@@ -381,7 +388,7 @@ def main():
 
     dis.add_handler(CommandHandler('start',start))
     dis.add_handler(conv_handler)
-    dis.add_handler(CallbackQueryHandler(buttons))
+    dis.add_handler(CallbackQueryHandler(button.btn))
 
     updater.start_polling()
 

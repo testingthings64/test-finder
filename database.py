@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, random
 
 
 def new_user(tel_id, gender, status = 'normal'):
@@ -38,6 +38,21 @@ def new_female_advertisement(data):
             connection.close()
 
 
+def new_save_code(code, tel_id):
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        
+        cursor.execute('insert into people VALUES (?,?,?, "normal")', (random.randint(1, 100000),tel_id,code,))
+        connection.commit()
+
+        return True
+    except sqlite3.Error as error:
+        print(error)
+        return False
+    finally:
+        if connection:
+            connection.close()
 
 
 # def get_all_users():
@@ -59,12 +74,53 @@ def get_all_advertisements(gender):
         connection = sqlite3.connect('database.db')
         cursor = connection.cursor()
         if gender == 'female':
-            cursor.execute("SELECT * FROM 'female-advertisement'")
+            cursor.execute("SELECT tel_id,city,age FROM 'female-advertisement'")
         elif gender == 'male':
             cursor.execute("SELECT * FROM 'male-advertisement'")
 
         results = cursor.fetchall()
 
+        connection.commit()
+
+        return results
+
+    except sqlite3.Error as error:
+        print(error) 
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_code(code):
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        
+        cursor.execute("SELECT * FROM 'female-advertisement' WHERE tel_id = (?)", (code,))
+
+        result = cursor.fetchone()
+
+        connection.commit()
+
+        return result
+
+    except sqlite3.Error as error:
+        print(error) 
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_saved_codes(tel_id):
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        
+        cursor.execute("SELECT code_id FROM people WHERE tel_id = (?)", (tel_id,))
+        results = cursor.fetchall()
+        
         connection.commit()
 
         return results
@@ -119,6 +175,22 @@ def get_gender(tel_id):
         gender = cursor.fetchone()
         connection.commit()
         return gender
+    except sqlite3.Error as error:
+        print(error)
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+
+def get_btn(tel_id):
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT tel_id,city,age FROM 'female-advertisement' WHERE tel_id = (?)",(tel_id,))
+        res = cursor.fetchall()
+        connection.commit()
+        return res
     except sqlite3.Error as error:
         print(error)
         return False
