@@ -46,7 +46,6 @@ def btn(update, context):
     elif callback.split('#')[0] == 'see_photo':
         code = callback.split('#')[1]
         m.send_photo(code, tel_id)
-        # print(update.callback_query)
     
     #save code
     elif callback.split('#')[0] == 'save_code':
@@ -67,6 +66,21 @@ def btn(update, context):
     elif callback == 'female_age_search':
         m.female_age_search(update,context)
 
+    #age range
+    elif callback.split('#')[0] == 'age_range':
+        age = callback.split('#')[1]
+        m.age_range(update,context,age)
+    
+    #price search
+    elif callback == 'price_search':
+        m.price_search(update,context)
+
+    #price range
+    elif callback.split('#')[0] == 'price_range':
+        price = callback.split('#')[1]
+        print(price)
+        m.price_range(update,context,price)
+    
     else:
         print(callback)
         m.not_exist(update, context)

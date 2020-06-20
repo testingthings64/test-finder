@@ -73,9 +73,9 @@ def all_female(update, context):
         """
         key = []
         for res in results:
-            key.append(code_btn(res))
+            key.append(code_btn(res[0]))
         key.append([InlineKeyboardButton('بازگشت', callback_data = 'return_key')])
-        update.callback_query.message.reply_text(text = text, reply_markup = InlineKeyboardMarkup(key))
+        update.callback_query.edit_message_text(text = text, reply_markup = InlineKeyboardMarkup(key))
 
 
 def send_photo(code, chat_id):
@@ -95,6 +95,7 @@ def save_code(update, context, code, tel_id):
 
 
 def code_btn(res):
+    res = db.get_btn(res)[0]
     btn = [InlineKeyboardButton(f"{res[1]} {res[0]}", callback_data = f"see_code#{res[0]}")]
     return btn
 
@@ -103,20 +104,20 @@ def see_code(update, context, code):
     res = db.get_code(code)
     if res:
         text = f"""
-                    نام: {res[1]}
-        سن: {res[2]}
-        شهر: {res[3]}
-        قد: {res[4]}
-        وزن: {res[5]}
-        مهریه: {res[6]}
-        کد: {res[0]}#
-        {res[8]}
+                    نام: {res[2]}
+        سن: {res[3]}
+        شهر: {res[4]}
+        قد: {res[5]}
+        وزن: {res[6]}
+        مهریه: {res[7]}
+        کد: {res[10]}#
+        {res[9]}
                     
                 """
         ret = [
             [InlineKeyboardButton('درخواست این کد', callback_data = 'reserve_code')],
-            [InlineKeyboardButton('مشاهده تصویر', callback_data = f'see_photo#{res[0]}')],
-            [InlineKeyboardButton('ذخیره آگهی', callback_data = f'save_code#{res[0]}')],
+            [InlineKeyboardButton('مشاهده تصویر', callback_data = f'see_photo#{res[10]}')],
+            [InlineKeyboardButton('ذخیره آگهی', callback_data = f'save_code#{res[10]}')],
             # [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
         ]
         ret_key = InlineKeyboardMarkup(ret)
@@ -128,17 +129,17 @@ def see_code(update, context, code):
 def saved_codes(update, context, tel_id):
     results = db.get_saved_codes(tel_id)
     if results:
-        key = []
+        key = show_btn(results)
         text = """ 
             لطفا روی کد مورد نظر کلیک کنید
         """
-        for tel_id in results:
-            res = db.get_btn(tel_id[0])[0]
-            key.append([InlineKeyboardButton(f"{res[1]} {res[0]}", callback_data = f"see_code#{res[0]}")])
-        # key.append([InlineKeyboardButton('بازگشت', callback_data = 'return_key')])
+        # for tel_id in results:
+        #     res = db.get_btn(tel_id[0])[0]
+        #     key.append([InlineKeyboardButton(f"{res[1]} {res[0]}", callback_data = f"see_code#{res[0]}")])
+        key.append([InlineKeyboardButton('بازگشت', callback_data = 'return_key')])
         update.callback_query.message.reply_text(text = text, reply_markup = InlineKeyboardMarkup(key))
     else:
-        error_db(update, context)
+        no_res(update,context)
 
 
 
@@ -173,7 +174,51 @@ def female_age_search(update,context):
         [InlineKeyboardButton('40 تا 50 سال', callback_data = 'age_range#3'),InlineKeyboardButton('50 سال به بالا', callback_data = 'age_range#4')]
     ]
     ret_key = InlineKeyboardMarkup(keys)
-    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+    update.callback_query.edit_message_text(text = text, reply_markup = ret_key)
+
+
+def price_search(update,context):
+    text = "بازه مهریه مورد نظر خود را انتخاب نمایید"
+    keys = [
+        [InlineKeyboardButton('زیر 1 میلیون', callback_data = 'price_range#1'),InlineKeyboardButton('1 تا 1.5 میلیون', callback_data = 'price_range#2')],
+        [InlineKeyboardButton('1.5 تا 2 میلیون', callback_data = 'price_range#3'),InlineKeyboardButton('بالای 2 میلیون', callback_data = 'price_range#4')]
+    ]
+    ret_key = InlineKeyboardMarkup(keys)
+    update.callback_query.edit_message_text(text = text, reply_markup = ret_key)
+
+
+
+def age_range(update,context,age):
+    results = db.get_by_age(age)
+    if results:
+        text = """ 
+            لطفا روی کد مورد نظر کلیک کنید
+        """
+        keys = InlineKeyboardMarkup(show_btn(results))
+        update.callback_query.edit_message_text(text = text, reply_markup = keys)
+    else:
+        no_res(update,context)
+
+
+def price_range(update,context,price):
+    results = db.get_by_price(price)
+    if results:
+        text = """ 
+            لطفا روی کد مورد نظر کلیک کنید
+        """
+        keys = InlineKeyboardMarkup(show_btn(results))
+        update.callback_query.edit_message_text(text = text, reply_markup = keys)
+    else:
+        no_res(update,context)
+
+
+def show_btn(results):
+    key = []
+    for res in results:
+        key.append(code_btn(res[0]))
+    key.append([InlineKeyboardButton('بازگشت', callback_data = 'return_key')])
+    return key
+
 
 
 def not_exist(update, context):
@@ -203,11 +248,8 @@ def reg_female(update, context):
     tel_id = update.callback_query.from_user.id
     exists = db.check_female_advertisement(tel_id)
     if not exists:
-        data['tel_id'] = tel_id
-        data['status'] = 'pending'
         text = """ 
             لطفا تمام اطلاعات خواسته شده را با دقت وارد نمایید.
-            برای خروج از فرایند ثبت آگهی در هر مرحله، دستور  /cancel  را انتخاب نمایید.
             برای شروع ثبت نام دستور  /register  را انتخاب کنید
         """
     else:
@@ -232,6 +274,9 @@ def reg_male(update, context):
 
 
 def register(update, context):
+    tel_id = update.message.chat.id
+    data['tel_id'] = tel_id
+    data['status'] = 'pending'
     text = """ 
         لطفا نام و نام خانوادگی خود را وارد نمایید
     """
@@ -326,8 +371,10 @@ def context(update, context):
 
 
 def photo(update, context):
+    data['code_id'] = db.get_id(data['tel_id'])
+    code_id = data['code_id']
     photo_file = update.message.photo[-1].get_file()
-    file_path = f'photos/img_{data["tel_id"]}.jpg'
+    file_path = f'photos/img_{code_id}.jpg'
     photo_file.download(file_path)
     # blob_form = convert_to_blob(file_path)
     # data['photo'] = blob_form
@@ -362,6 +409,12 @@ def cancel(update, context):
 
 def error_db(update, context):
     text = "مشکلی پیش آمده، لطفا دوباره تلاش کنید"
+    ret_key = InlineKeyboardMarkup([[InlineKeyboardButton('بازگشت', callback_data = 'return_key')]])
+    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+
+
+def no_res(update, context):
+    text = "موردی وجود ندارد"
     ret_key = InlineKeyboardMarkup([[InlineKeyboardButton('بازگشت', callback_data = 'return_key')]])
     update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
 
