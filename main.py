@@ -328,7 +328,7 @@ def reg_male(update, context):
         [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
     ]
     ret_key = InlineKeyboardMarkup(ret)
-    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+    update.callback_query.edit_message_text(text = text, reply_markup = ret_key)
 
 
 
@@ -339,7 +339,7 @@ def register(update, context):
     text = """ 
         لطفا نام و نام خانوادگی خود را وارد نمایید
     """
-    update.message.edit_message_text(text)
+    update.message.reply_text(text)
     return NAME
 
 
