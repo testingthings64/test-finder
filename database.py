@@ -224,7 +224,6 @@ def search_city(city):
         
         cursor.execute("SELECT code_id FROM 'female-advertisement' WHERE city = (?)", (city,))
         results = cursor.fetchall()
-        print(results)
         connection.commit()
 
         return results

@@ -90,7 +90,8 @@ def save_code(update, context, code, tel_id):
     else:
         text = 'آگهی مورد نظر قبلا ذخیره شده است'
 
-    key = [[InlineKeyboardButton('بازگشت به کد', callback_data = f'see_code#{code}')]]
+    # key = [[InlineKeyboardButton('بازگشت به کد', callback_data = f'see_code#{code}')]]
+    key = [[InlineKeyboardButton('بازگشت', callback_data = 'return_key')]]
     update.callback_query.edit_message_text(text = text, reply_markup = InlineKeyboardMarkup(key))
 
 
@@ -180,10 +181,11 @@ def famele_city_search(update, context):
 
         [InlineKeyboardButton('یزد',callback_data='city#یزد'),
         InlineKeyboardButton('همدان',callback_data='city#همدان'),
-        InlineKeyboardButton('هرمزگان',callback_data='city#هرمزگان')]
+        InlineKeyboardButton('هرمزگان',callback_data='city#هرمزگان')],
+        [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
 
     ]
-    update.callback_query.message.reply_text(text=text, reply_markup=InlineKeyboardMarkup(cats, one_time_keyboard=True))
+    update.callback_query.edit_message_text(text=text, reply_markup=InlineKeyboardMarkup(cats, one_time_keyboard=True))
 
 
 
@@ -217,7 +219,8 @@ def female_age_search(update,context):
     text = "بازه سنی مورد نظر خود را انتخاب نمایید"
     keys = [
         [InlineKeyboardButton('18 تا 30 سال', callback_data = 'age_range#1'),InlineKeyboardButton('30 تا 40 سال', callback_data = 'age_range#2')],
-        [InlineKeyboardButton('40 تا 50 سال', callback_data = 'age_range#3'),InlineKeyboardButton('50 سال به بالا', callback_data = 'age_range#4')]
+        [InlineKeyboardButton('40 تا 50 سال', callback_data = 'age_range#3'),InlineKeyboardButton('50 سال به بالا', callback_data = 'age_range#4')],
+        [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
     ]
     ret_key = InlineKeyboardMarkup(keys)
     update.callback_query.edit_message_text(text = text, reply_markup = ret_key)
@@ -227,7 +230,8 @@ def price_search(update,context):
     text = "بازه مهریه مورد نظر خود را انتخاب نمایید"
     keys = [
         [InlineKeyboardButton('زیر 1 میلیون', callback_data = 'price_range#1'),InlineKeyboardButton('1 تا 1.5 میلیون', callback_data = 'price_range#2')],
-        [InlineKeyboardButton('1.5 تا 2 میلیون', callback_data = 'price_range#3'),InlineKeyboardButton('بالای 2 میلیون', callback_data = 'price_range#4')]
+        [InlineKeyboardButton('1.5 تا 2 میلیون', callback_data = 'price_range#3'),InlineKeyboardButton('بالای 2 میلیون', callback_data = 'price_range#4')],
+        [InlineKeyboardButton('بازگشت', callback_data = 'return_key')]
     ]
     ret_key = InlineKeyboardMarkup(keys)
     update.callback_query.edit_message_text(text = text, reply_markup = ret_key)
@@ -335,7 +339,7 @@ def register(update, context):
     text = """ 
         لطفا نام و نام خانوادگی خود را وارد نمایید
     """
-    update.message.reply_text(text)
+    update.message.edit_message_text(text)
     return NAME
 
 
@@ -476,13 +480,13 @@ def cancel(update, context):
 def error_db(update, context):
     text = "مشکلی پیش آمده، لطفا دوباره تلاش کنید"
     ret_key = InlineKeyboardMarkup([[InlineKeyboardButton('بازگشت', callback_data = 'return_key')]])
-    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+    update.callback_query.edit_message_text(text = text, reply_markup = ret_key)
 
 
 def no_res(update, context):
     text = "موردی وجود ندارد"
     ret_key = InlineKeyboardMarkup([[InlineKeyboardButton('بازگشت', callback_data = 'return_key')]])
-    update.callback_query.message.reply_text(text = text, reply_markup = ret_key)
+    update.callback_query.edit_message_text(text = text, reply_markup = ret_key)
 
 
 def main():
