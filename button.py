@@ -59,7 +59,8 @@ def btn(update, context):
 
     #see save codes
     elif callback == 'saved_codes':
-        m.saved_codes(update, context, tel_id)
+        results = db.get_saved_codes(tel_id)
+        m.show_results(update,context,results)
     
 
     #age search
@@ -69,7 +70,8 @@ def btn(update, context):
     #age range
     elif callback.split('#')[0] == 'age_range':
         age = callback.split('#')[1]
-        m.age_range(update,context,age)
+        results = db.get_by_age(age)
+        m.show_results(update,context,results)
     
     #price search
     elif callback == 'price_search':
@@ -78,9 +80,19 @@ def btn(update, context):
     #price range
     elif callback.split('#')[0] == 'price_range':
         price = callback.split('#')[1]
-        print(price)
-        m.price_range(update,context,price)
+        results = db.get_by_price(price)
+        m.show_results(update,context,results)
     
+    #famele city search
+    elif callback == 'famele_city_search':
+        m.famele_city_search(update, context)
+    
+    #city search
+    elif callback.split('#')[0] == 'city':
+        city = callback.split('#')[1]
+        results = db.search_city(city)
+        m.show_results(update,context,results)
+
     else:
         print(callback)
         m.not_exist(update, context)

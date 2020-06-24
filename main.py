@@ -126,20 +126,66 @@ def see_code(update, context, code):
         error_db(update, context)
 
 
-def saved_codes(update, context, tel_id):
-    results = db.get_saved_codes(tel_id)
-    if results:
-        key = show_btn(results)
-        text = """ 
-            لطفا روی کد مورد نظر کلیک کنید
-        """
-        # for tel_id in results:
-        #     res = db.get_btn(tel_id[0])[0]
-        #     key.append([InlineKeyboardButton(f"{res[1]} {res[0]}", callback_data = f"see_code#{res[0]}")])
-        key.append([InlineKeyboardButton('بازگشت', callback_data = 'return_key')])
-        update.callback_query.message.reply_text(text = text, reply_markup = InlineKeyboardMarkup(key))
-    else:
-        no_res(update,context)
+# def saved_codes(update, context, tel_id):
+#     results = db.get_saved_codes(tel_id)
+#     if results:
+#         key = show_btn(results)
+#         text = """ 
+#             لطفا روی کد مورد نظر کلیک کنید
+#         """
+#         key.append([InlineKeyboardButton('بازگشت', callback_data = 'return_key')])
+#         update.callback_query.message.reply_text(text = text, reply_markup = InlineKeyboardMarkup(key))
+#     else:
+#         no_res(update,context)
+    
+
+
+def famele_city_search(update, context):
+    text = 'لطفا نام استان مورد نظر خود را انتخاب کنید'
+    cats = [
+        [InlineKeyboardButton('اردبیل',callback_data='city#اردبیل'),
+        InlineKeyboardButton('اصفهان',callback_data='city#اصفهان'),
+        InlineKeyboardButton('آذربایجان غربی',callback_data='city#آذربایجان غربی'),
+        InlineKeyboardButton('آذربایجان شرقی',callback_data='city#آذربایجان شرقی')],
+
+        [InlineKeyboardButton('تهران',callback_data='city#تهران'),
+        InlineKeyboardButton('بوشهر',callback_data='city#بوشهر'),
+        InlineKeyboardButton('ایلام',callback_data='city#ایلام'),
+        InlineKeyboardButton('البرز',callback_data='city#البرز')],
+
+        [InlineKeyboardButton('خراسان شمالی',callback_data='city#خراسان شمالی'),
+        InlineKeyboardButton('خراسان رضوی',callback_data='city#خراسان رضوی'),
+        InlineKeyboardButton('خراسان جنوبی',callback_data='city#خراسان جنوبی'),
+        InlineKeyboardButton('چهارمحال و بختیاری',callback_data='city#چهارمحال و بختیاری')],
+
+        [InlineKeyboardButton('سیستان و بلوچستان',callback_data='city#سیستان و بلوچستان'),
+        InlineKeyboardButton('سمنان',callback_data='city#سمنان'),
+        InlineKeyboardButton('زنجان',callback_data='city#زنجان'),
+        InlineKeyboardButton('خوزستان',callback_data='city#خوزستان')],
+
+        [InlineKeyboardButton('فارس',callback_data='city#فارس'),
+        InlineKeyboardButton('گلستان',callback_data='city#گلستان'),
+        InlineKeyboardButton('کردستان',callback_data='city#کردستان'),
+        InlineKeyboardButton('قم',callback_data='city#قم')],
+
+        [InlineKeyboardButton('قزوین',callback_data='city#قزوین'),
+        InlineKeyboardButton('کهگیلویه و بویراحمد',callback_data='city#کهگیلویه و بویراحمد'),
+        InlineKeyboardButton('کرمانشاه',callback_data='city#کرمانشاه'),
+        InlineKeyboardButton('کرمان',callback_data='city#کرمان')],
+        
+        [InlineKeyboardButton('مرکزی',callback_data='city#مرکزی'),
+        InlineKeyboardButton('مازندران',callback_data='city#مازندران'),
+        InlineKeyboardButton('لرستان',callback_data='city#لرستان'),
+        InlineKeyboardButton('گیلان',callback_data='city#گیلان')],
+
+        [InlineKeyboardButton('یزد',callback_data='city#یزد'),
+        InlineKeyboardButton('همدان',callback_data='city#همدان'),
+        InlineKeyboardButton('هرمزگان',callback_data='city#هرمزگان')]
+
+    ]
+    update.callback_query.message.reply_text(text=text, reply_markup=InlineKeyboardMarkup(cats, one_time_keyboard=True))
+
+
 
 
 
@@ -188,28 +234,28 @@ def price_search(update,context):
 
 
 
-def age_range(update,context,age):
-    results = db.get_by_age(age)
-    if results:
-        text = """ 
-            لطفا روی کد مورد نظر کلیک کنید
-        """
-        keys = InlineKeyboardMarkup(show_btn(results))
-        update.callback_query.edit_message_text(text = text, reply_markup = keys)
-    else:
-        no_res(update,context)
+# def age_range(update,context,age):
+#     results = db.get_by_age(age)
+#     if results:
+#         text = """ 
+#             لطفا روی کد مورد نظر کلیک کنید
+#         """
+#         keys = InlineKeyboardMarkup(show_btn(results))
+#         update.callback_query.edit_message_text(text = text, reply_markup = keys)
+#     else:
+#         no_res(update,context)
 
 
-def price_range(update,context,price):
-    results = db.get_by_price(price)
-    if results:
-        text = """ 
-            لطفا روی کد مورد نظر کلیک کنید
-        """
-        keys = InlineKeyboardMarkup(show_btn(results))
-        update.callback_query.edit_message_text(text = text, reply_markup = keys)
-    else:
-        no_res(update,context)
+# def price_range(update,context,price):
+#     results = db.get_by_price(price)
+#     if results:
+#         text = """ 
+#             لطفا روی کد مورد نظر کلیک کنید
+#         """
+#         keys = InlineKeyboardMarkup(show_btn(results))
+#         update.callback_query.edit_message_text(text = text, reply_markup = keys)
+#     else:
+#         no_res(update,context)
 
 
 def show_btn(results):
@@ -229,6 +275,15 @@ def not_exist(update, context):
     update.callback_query.edit_message_text(text = 'این مورد فعلا موجود نیست!', reply_markup = ret_key)
 
 
+def show_results(update,context,results):
+    if results:
+        text = """ 
+            لطفا روی کد مورد نظر کلیک کنید
+        """
+        keys = InlineKeyboardMarkup(show_btn(results))
+        update.callback_query.edit_message_text(text = text, reply_markup = keys)
+    else:
+        no_res(update,context)
 
 
 
@@ -298,9 +353,20 @@ def age(update, context):
     in_age = update.message.text
     data['age'] = in_age
     text = """ 
-        لطفا نام شهر محل زندگی خود را وارد نمایید
+        لطفا نام استان محل زندگی خود را انتخاب نمایید
     """
-    update.message.reply_text(text)
+    cats = [
+        ['آذربایجان شرقی','آذربایجان غربی','اردبیل','اصفهان'],
+        ['البرز','ایلام','بوشهر','تهران'],
+        ['چهارمحال و بختیاری','خراسان جنوبی','خراسان رضوی','خراسان شمالی'],
+        ['خوزستان','زنجان','سمنان','سیستان و بلوچستان'],
+        ['فارس','قزوین','قم','کردستان'],
+        ['کرمان','کرمانشاه','کهگیلویه و بویراحمد','گلستان'],
+        ['گیلان','لرستان','	مازندران','	مرکزی'],
+        ['هرمزگان','همدان','یزد']
+    ]
+    
+    update.message.reply_text(text, reply_markup = ReplyKeyboardMarkup(cats, one_time_keyboard=True))
     return CITY
 
 
@@ -312,7 +378,7 @@ def city(update, context):
 
         مثال: 170
     """
-    update.message.reply_text(text)
+    update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
     return HEIGHT
 
 
@@ -428,7 +494,7 @@ def main():
         states = {
             NAME: [MessageHandler(Filters.text, name)],
             AGE: [MessageHandler(Filters.text, age)],
-            CITY: [MessageHandler(Filters.text, city)],
+            CITY: [MessageHandler(Filters.regex('^(اصفهان|اردبیل|آذربایجان غربی|آذربایجان شرقی|تهران|بوشهر|ایلام|البرز|خراسان شمالی|سمنان|زنجان|خوزستان|کردستان|قم|قزوین|فارس|گلستان|کهگیلویه و بویراحمد|کرمانشاه|کرمان|مرکزی|مازندران|لرستان|گیلان|یزد|همدان|هرمزگان)$'), city)],
             HEIGHT: [MessageHandler(Filters.text, height)],
             WEIGHT: [MessageHandler(Filters.text, weight)],
             PRICE: [MessageHandler(Filters.text, price)],

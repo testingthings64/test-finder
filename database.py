@@ -121,7 +121,6 @@ def get_code(code):
         cursor.execute("SELECT * FROM 'female-advertisement' WHERE code_id = (?)", (code,))
 
         result = cursor.fetchone()
-        print(result)
 
         connection.commit()
 
@@ -217,6 +216,25 @@ def get_by_price(price):
         if connection:
             connection.close()
 
+
+def search_city(city):
+    try:
+        connection = sqlite3.connect('database.db')
+        cursor = connection.cursor()
+        
+        cursor.execute("SELECT code_id FROM 'female-advertisement' WHERE city = (?)", (city,))
+        results = cursor.fetchall()
+        print(results)
+        connection.commit()
+
+        return results
+
+    except sqlite3.Error as error:
+        print(error) 
+        return False
+    finally:
+        if connection:
+            connection.close()
 
 
 
